@@ -1,113 +1,250 @@
 import 'package:flutter/material.dart';
 
+/// Bloc + Cubit
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mealplanner/cubit/planner_cubit.dart';
+import 'package:mealplanner/models/planner_repository.dart';
+
 void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
+    return BlocProvider(
+      create: (context) => PlannerCubit(PlannerRepository()),
+      child: MaterialApp(
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        home: MyHomePage(),
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+  MyHomePage({ Key key }) : super(key: key);
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
 
-  void _incrementCounter() {
+  // TODO: ensure we can add meals from list for certain days
+  // TODO: clean up code and UI - get basic UI looking as it should
+  // TODO: create Meals list screen
+  // TODO: tapping Add meal button should go to Meals list screen. Should be able to navigate back
+
+  PageController _pageController;
+  /// Current page shown in PageView
+  int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: _currentPage);
+    BlocProvider.of<PlannerCubit>(context).loadPlanner(); // * load data from config. In real app this would be from server or device storage
+  }
+  
+  /// When navbar item is tapped, change page in PageView
+  void _onNavBarItemTapped(int index) {
+    _pageController.jumpToPage(index);
+    _setCurrentPage(index);
+  }
+
+  /// Update [_currentPage] so the correct page is highlighted in BottomNavigationBar
+  void _setCurrentPage(int index) {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      _currentPage = index;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
+    return BlocBuilder<PlannerCubit, PlannerState>(
+      builder: (context, state) {
+        if (state is PlannerLoaded) {
+          print(state.weekPlan.days[0].date);
+          print(state.weekPlan.days[0].meals.toString());
+          return Scaffold(
+            body: PageView(
+              onPageChanged: _setCurrentPage, /// this ensures that the correct page is highlighted when scrolling to different page
+              controller: _pageController,
+              children: [
+                DayPage(),
+                WeekPage(),
+              ],
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
+            bottomNavigationBar: BottomNavigationBar(
+              onTap: _onNavBarItemTapped,
+              currentIndex: _currentPage,
+              items: [
+                BottomNavigationBarItem(
+                  label: 'Day',
+                  icon: Icon(Icons.view_day),
+                ),
+                BottomNavigationBarItem(
+                  label: 'Week',
+                  icon: Icon(Icons.view_week),
+                ),
+              ],
             ),
-          ],
+          );
+        }
+        return Scaffold(body: Center(child: CircularProgressIndicator()));
+      },
+    );
+  }
+}
+
+class DayPage extends StatelessWidget {
+  const DayPage({ Key key }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        physics: BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+        child: Center(
+          child: Column(
+            children: [
+              CustomButton(), // TODO: date picker button
+              SizedBox(height: 10),
+              MealsForDay(),
+            ],
+          ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+}
+
+class WeekPage extends StatelessWidget {
+  const WeekPage({ Key key }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        physics: BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+        child: Center(
+          child: Column(
+            children: [
+              MealsForDay(),
+              MealsForDay(),
+              MealsForDay(),
+              MealsForDay(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// TODO: should show correct date
+// TODO: should get data from JSON or somewhere and show meals for THAT date
+// TODO: rename to something better
+class MealsForDay extends StatelessWidget {
+  const MealsForDay({
+    Key key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Text('1st June'),
+            CustomButton(),
+          ],
+        ),
+        // TODO: should show all meals for this day
+        ColumnBuilder(
+          itemCount: 2,
+          itemBuilder: (context, index) {
+            return CustomListTile();
+          },
+        ),
+      ],
+    );
+  }
+}
+
+// TODO: comment this and explain that it is not mine
+// https://gist.github.com/slightfoot/a75d6c368f1b823b594d9f04bf667231
+class ColumnBuilder extends StatelessWidget {
+  final IndexedWidgetBuilder itemBuilder;
+  final MainAxisAlignment mainAxisAlignment;
+  final MainAxisSize mainAxisSize;
+  final CrossAxisAlignment crossAxisAlignment;
+  final VerticalDirection verticalDirection;
+  final int itemCount;
+
+  const ColumnBuilder({
+    Key key,
+    @required this.itemBuilder,
+    @required this.itemCount,
+    this.mainAxisAlignment: MainAxisAlignment.start,
+    this.mainAxisSize: MainAxisSize.max,
+    this.crossAxisAlignment: CrossAxisAlignment.center,
+    this.verticalDirection: VerticalDirection.down,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return new Column(
+      crossAxisAlignment: this.crossAxisAlignment,
+      mainAxisSize: this.mainAxisSize,
+      mainAxisAlignment: this.mainAxisAlignment,
+      verticalDirection: this.verticalDirection,
+      children:
+          new List.generate(this.itemCount, (index) => this.itemBuilder(context, index)).toList(),
+    );
+  }
+}
+
+// TODO: this widget should take a title as arguement
+class CustomListTile extends StatelessWidget {
+  const CustomListTile({
+    Key key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      color: Colors.red,
+      child: ListTile(
+        title: Text('Stir Fry'),
+      ),
+    );
+  }
+}
+
+// TODO: this widget should take label and ontap as arguements
+class CustomButton extends StatelessWidget {
+  const CustomButton({
+    Key key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      child: Text("ElevatedButton"),
+      onPressed: () => print("it's pressed"),
+      style: ElevatedButton.styleFrom(
+        primary: Colors.red,
+        onPrimary: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(32.0),
+        ),
+      ),
     );
   }
 }
