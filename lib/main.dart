@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 /// Bloc + Cubit
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mealplanner/cubit/planner_cubit.dart';
+import 'package:mealplanner/models/planner_models.dart';
 import 'package:mealplanner/models/planner_repository.dart';
 
 void main() {
@@ -33,6 +34,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
+  // TODO: create TEST button to add a meal to a day. Ensure that state and widgets are updated and we always see up to date planner
   // TODO: ensure we can add meals from list for certain days
   // TODO: clean up code and UI - get basic UI looking as it should
   // TODO: create Meals list screen
@@ -67,15 +69,13 @@ class _MyHomePageState extends State<MyHomePage> {
     return BlocBuilder<PlannerCubit, PlannerState>(
       builder: (context, state) {
         if (state is PlannerLoaded) {
-          print(state.weekPlan.days[0].date);
-          print(state.weekPlan.days[0].meals.toString());
           return Scaffold(
             body: PageView(
               onPageChanged: _setCurrentPage, /// this ensures that the correct page is highlighted when scrolling to different page
               controller: _pageController,
               children: [
-                DayPage(),
-                WeekPage(),
+                DayPage(state),
+                WeekPage(state), // TODO: should we be passing state like this??
               ],
             ),
             bottomNavigationBar: BottomNavigationBar(
@@ -101,7 +101,8 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class DayPage extends StatelessWidget {
-  const DayPage({ Key key }) : super(key: key);
+  const DayPage(this.state, { Key key }) : super(key: key);
+  final PlannerLoaded state;
 
   @override
   Widget build(BuildContext context) {
@@ -113,7 +114,8 @@ class DayPage extends StatelessWidget {
             children: [
               CustomButton(), // TODO: date picker button
               SizedBox(height: 10),
-              MealsForDay(),
+              MealsForDay(state.weekPlan.days[0]),
+              // TODO: show meals for the CURRENT DATE (need device datetime and get from PlannerCubit)
             ],
           ),
         ),
@@ -123,7 +125,8 @@ class DayPage extends StatelessWidget {
 }
 
 class WeekPage extends StatelessWidget {
-  const WeekPage({ Key key }) : super(key: key);
+  const WeekPage(this.state, { Key key }) : super(key: key);
+  final PlannerLoaded state;
 
   @override
   Widget build(BuildContext context) {
@@ -131,13 +134,11 @@ class WeekPage extends StatelessWidget {
       child: SingleChildScrollView(
         physics: BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
         child: Center(
-          child: Column(
-            children: [
-              MealsForDay(),
-              MealsForDay(),
-              MealsForDay(),
-              MealsForDay(),
-            ],
+          child: ColumnBuilder(
+            itemCount: state.weekPlan.days.length,
+            itemBuilder: (context, index) {
+              return MealsForDay(state.weekPlan.days[index]);
+            },
           ),
         ),
       ),
@@ -145,30 +146,29 @@ class WeekPage extends StatelessWidget {
   }
 }
 
-// TODO: should show correct date
 // TODO: should get data from JSON or somewhere and show meals for THAT date
 // TODO: rename to something better
 class MealsForDay extends StatelessWidget {
-  const MealsForDay({
-    Key key,
-  }) : super(key: key);
+  const MealsForDay(this.dayPlan, { Key key }) : super(key: key);
+  final DayPlan dayPlan;
 
   @override
   Widget build(BuildContext context) {
+    print(dayPlan.date);
     return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Text('1st June'),
+            Text(dayPlan.date), // TODO: show in correct format
             CustomButton(),
           ],
         ),
-        // TODO: should show all meals for this day
+        // TODO: if no meals for this day, show some text instead 'No meals for this day'
         ColumnBuilder(
-          itemCount: 2,
+          itemCount: dayPlan.meals.length,
           itemBuilder: (context, index) {
-            return CustomListTile();
+            return MealTile(dayPlan.meals[index]);
           },
         ),
       ],
@@ -204,16 +204,14 @@ class ColumnBuilder extends StatelessWidget {
       mainAxisAlignment: this.mainAxisAlignment,
       verticalDirection: this.verticalDirection,
       children:
-          new List.generate(this.itemCount, (index) => this.itemBuilder(context, index)).toList(),
+        new List.generate(this.itemCount, (index) => this.itemBuilder(context, index)).toList(),
     );
   }
 }
 
-// TODO: this widget should take a title as arguement
-class CustomListTile extends StatelessWidget {
-  const CustomListTile({
-    Key key,
-  }) : super(key: key);
+class MealTile extends StatelessWidget {
+  const MealTile(this.label, { Key key }) : super(key: key);
+  final String label;
 
   @override
   Widget build(BuildContext context) {
@@ -221,7 +219,7 @@ class CustomListTile extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       color: Colors.red,
       child: ListTile(
-        title: Text('Stir Fry'),
+        title: Text(label),
       ),
     );
   }
@@ -229,9 +227,7 @@ class CustomListTile extends StatelessWidget {
 
 // TODO: this widget should take label and ontap as arguements
 class CustomButton extends StatelessWidget {
-  const CustomButton({
-    Key key,
-  }) : super(key: key);
+  const CustomButton({ Key key }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
