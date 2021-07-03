@@ -34,3 +34,11 @@ class PlannerError extends PlannerState {
   @override
   List<Object> get props => [message];
 }
+
+class MealAdded extends PlannerState {
+  final String meal;
+  const MealAdded(this.meal);
+
+  @override
+  List<Object> get props => [meal];
+}

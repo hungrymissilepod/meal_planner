@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io' show Platform;
 
 /// Bloc + Cubit
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,9 +17,7 @@ class MyApp extends StatelessWidget {
     return BlocProvider(
       create: (context) => PlannerCubit(PlannerRepository()),
       child: MaterialApp(
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-        ),
+        theme: ThemeData(primarySwatch: Colors.blue),
         home: MyHomePage(),
       ),
     );
@@ -34,11 +33,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
-  // TODO: create TEST button to add a meal to a day. Ensure that state and widgets are updated and we always see up to date planner
-  // TODO: ensure we can add meals from list for certain days
   // TODO: clean up code and UI - get basic UI looking as it should
-  // TODO: create Meals list screen
-  // TODO: tapping Add meal button should go to Meals list screen. Should be able to navigate back
 
   PageController _pageController;
   /// Current page shown in PageView
@@ -47,8 +42,11 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    /// Load user's meal plan on app start
+    BlocProvider.of<PlannerCubit>(context).initialiseSelectedDate();
+    BlocProvider.of<PlannerCubit>(context).loadPlanner();
+    
     _pageController = PageController(initialPage: _currentPage);
-    BlocProvider.of<PlannerCubit>(context).loadPlanner(); // * load data from config. In real app this would be from server or device storage
   }
   
   /// When navbar item is tapped, change page in PageView
@@ -66,16 +64,30 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<PlannerCubit, PlannerState>(
+    return BlocConsumer<PlannerCubit, PlannerState>(
+      listener: (context, state) {
+        // TODO: double check this. Do we want this behaviour??
+        if (state is MealAdded) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Meal added: ${state.meal}')));
+        }
+        if (state is PlannerInitial) {
+          BlocProvider.of<PlannerCubit>(context).loadPlanner();
+        }
+      },
       builder: (context, state) {
         if (state is PlannerLoaded) {
           return Scaffold(
+            floatingActionButton: FloatingActionButton(
+              onPressed: () {
+                BlocProvider.of<PlannerCubit>(context).testChangeDate();
+              },
+            ),
             body: PageView(
               onPageChanged: _setCurrentPage, /// this ensures that the correct page is highlighted when scrolling to different page
               controller: _pageController,
               children: [
                 DayPage(state),
-                WeekPage(state), // TODO: should we be passing state like this??
+                WeekPage(state),
               ],
             ),
             bottomNavigationBar: BottomNavigationBar(
@@ -106,16 +118,16 @@ class DayPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    /// Load DayPlan for selectedDate
+    DayPlan dayPlan = BlocProvider.of<PlannerCubit>(context).getMealsForSelectedDate(state.weekPlan);
     return SafeArea(
       child: SingleChildScrollView(
         physics: BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
         child: Center(
           child: Column(
             children: [
-              CustomButton(), // TODO: date picker button
-              SizedBox(height: 10),
-              MealsForDay(state.weekPlan.days[0]),
-              // TODO: show meals for the CURRENT DATE (need device datetime and get from PlannerCubit)
+              ChangeDateButton(),
+              MealsForDay(dayPlan),
             ],
           ),
         ),
@@ -154,14 +166,14 @@ class MealsForDay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(dayPlan.date);
+    // print(dayPlan.date);
     return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             Text(dayPlan.date), // TODO: show in correct format
-            CustomButton(),
+            AddMealButton(dayPlan.date),
           ],
         ),
         // TODO: if no meals for this day, show some text instead 'No meals for this day'
@@ -226,14 +238,73 @@ class MealTile extends StatelessWidget {
 }
 
 // TODO: this widget should take label and ontap as arguements
+// class CustomButton extends StatelessWidget {
+//   const CustomButton(this.date, { Key key }) : super(key: key);
+
+//   final String date;
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return ElevatedButton(
+//       child: Text("Add Meal"),
+//       onPressed: () {
+//         if(Platform.isIOS) { Navigator.of(context).push(MaterialPageRoute(builder: (context) => MealSelectScreen(date), settings: RouteSettings(name: 'MealSelectScreen'))); }
+//         else { Navigator.push(context, PageRouteBuilder(pageBuilder: (_, __, ___) => MealSelectScreen(date), settings: RouteSettings(name: 'MealSelectScreen'))); }
+//       },
+//       style: ElevatedButton.styleFrom(
+//         primary: Colors.red,
+//         onPrimary: Colors.white,
+//         shape: RoundedRectangleBorder(
+//           borderRadius: BorderRadius.circular(32.0),
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+class ChangeDateButton extends StatelessWidget {
+  const ChangeDateButton({ Key key }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomButton(
+      label: 'Change Date',
+      // TODO: should open date picker and allow user to change selectedDate
+      onTap: () {
+        print('change date');
+      },
+    );
+  }
+}
+
+class AddMealButton extends StatelessWidget {
+  const AddMealButton(this.date, { Key key }) : super(key: key);
+
+  final String date;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomButton(
+      label: 'Add Meal',
+      onTap: () {
+        if(Platform.isIOS) { Navigator.of(context).push(MaterialPageRoute(builder: (context) => MealSelectScreen(date), settings: RouteSettings(name: 'MealSelectScreen'))); }
+        else { Navigator.push(context, PageRouteBuilder(pageBuilder: (_, __, ___) => MealSelectScreen(date), settings: RouteSettings(name: 'MealSelectScreen'))); }
+      }
+    );
+  }
+}
+
 class CustomButton extends StatelessWidget {
-  const CustomButton({ Key key }) : super(key: key);
+  const CustomButton({ this.label, this.onTap, Key key }) : super(key: key);
+
+  final String label;
+  final Function onTap;
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      child: Text("ElevatedButton"),
-      onPressed: () => print("it's pressed"),
+      child: Text(label),
+      onPressed: onTap,
       style: ElevatedButton.styleFrom(
         primary: Colors.red,
         onPrimary: Colors.white,
@@ -241,6 +312,51 @@ class CustomButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(32.0),
         ),
       ),
+    );
+  }
+}
+
+class MealSelectScreen extends StatelessWidget {
+  MealSelectScreen(this.date, { Key key }) : super(key: key);
+  final String date;
+
+  final List<String> meals = ['pasta', 'burger', 'pizza', 'stir fry', 'pumpkin', 'butternut squash', 'tomato and egg', 'curry'];
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<PlannerCubit, PlannerState>(
+      builder: (context, state) {
+        if (state is PlannerLoaded) {
+          return Scaffold(
+            appBar: AppBar(
+              // TODO: set to correct colour
+              iconTheme: IconThemeData(color: Colors.purple),
+              backgroundColor: Colors.white,
+            ),
+            backgroundColor: Colors.red,
+            body: SafeArea(
+              child: ListView.builder(
+                itemCount: meals.length,
+                itemBuilder: (context, index) {
+                  return Card(
+                    child: ListTile(
+                      title: Text(meals[index]),
+                      trailing: ElevatedButton(
+                        onPressed: () {
+                          BlocProvider.of<PlannerCubit>(context).addMealToDate(state.weekPlan, date, meals[index]);
+                          Navigator.of(context).pop();
+                        },
+                        child: Text('Add'),
+                      ),
+                    ),
+                  );
+                }
+              ),
+            ),
+          );
+        }
+        return Container();
+      },
     );
   }
 }
