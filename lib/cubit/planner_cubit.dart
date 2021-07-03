@@ -6,7 +6,7 @@ import 'package:mealplanner/models/planner_repository.dart';
 
 /// Utilities
 import 'package:equatable/equatable.dart';
-import 'package:intl/intl.dart';
+import 'package:jiffy/jiffy.dart';
 
 /// Models
 import 'package:mealplanner/models/planner_models.dart';
@@ -22,15 +22,11 @@ class PlannerCubit extends Cubit<PlannerState> {
   /// Defaults to device time on app launch.
   String selectedDate = '';
 
-  final formatter = new DateFormat('yyyy-MM-dd');
-
-  // TODO: add selectedDate var to keep track of which date user wants to look at. Should start as device date on app launch
-
   /// Initialises the [selectedDate] variable on app launch.
   void initialiseSelectedDate() {
     /// Get date today and format to same style as in JSON file
     var now = DateTime.now();
-    selectedDate = formatter.format(now);
+    selectedDate = Jiffy(now).format('yyyy-MM-dd');
   }
   
   // Load meal planner data from JSON file. In real app this would be from server or device storage.
