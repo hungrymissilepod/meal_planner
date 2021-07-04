@@ -34,13 +34,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
-  // TODO: clean up code and UI - get basic UI looking as it should
-  // TODO: should be able to pick date and app should update and show selected dates meals
-  // TODO: ensure all functionality is as specified in design doc
+  
   // TODO: clean up UI and make it look nicer
   // TODO: ensure app scales correctly based on screensize. Maybe also make sure it scales in landscape mode
   // TODO: app does not need to save data. But try to ensure that state is consistent when changing dates. So if I add a meal to the 1st, then change date to the 2nd, I should still see the meal I added to the 1st in the WeekScreen
+  // TODO: set final data in JSON file and final meals in meal select screen
+  // TODO: comment all code
 
   PageController _pageController;
   /// Current page shown in PageView
@@ -72,23 +71,9 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<PlannerCubit, PlannerState>(
-      listener: (context, state) {
-        // TODO: double check this. Do we want this behaviour??
-        if (state is MealAdded) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Meal added: ${state.meal}')));
-        }
-        if (state is PlannerInitial) {
-          BlocProvider.of<PlannerCubit>(context).loadPlanner();
-        }
-      },
       builder: (context, state) {
         if (state is PlannerLoaded) {
           return Scaffold(
-            floatingActionButton: FloatingActionButton(
-              onPressed: () {
-                BlocProvider.of<PlannerCubit>(context).testChangeDate();
-              },
-            ),
             body: PageView(
               onPageChanged: _setCurrentPage, /// this ensures that the correct page is highlighted when scrolling to different page
               controller: _pageController,
@@ -114,6 +99,14 @@ class _MyHomePageState extends State<MyHomePage> {
           );
         }
         return Scaffold(body: Center(child: CircularProgressIndicator()));
+      },
+      listener: (context, state) {
+        /// When selectedDate is changed the state is reset to PlannerInitial. Here we will reload the meal planner.
+        if (state is SelectedDateChanged) {
+          BlocProvider.of<PlannerCubit>(context).loadPlanner();
+        } else if (state is MealAdded) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Meal added: ${state.meal}')));
+        }
       },
     );
   }

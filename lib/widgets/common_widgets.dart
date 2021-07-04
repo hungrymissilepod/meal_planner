@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'dart:io' show Platform;
 
 /// Bloc + Cubit
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mealplanner/cubit/planner_cubit.dart';
+
+/// Models
 import 'package:mealplanner/models/planner_models.dart';
 
 /// Utilities
@@ -34,13 +38,14 @@ class MealsForDay extends StatelessWidget {
                   AddMealButton(dayPlan.date),
                 ],
               ),
-              // TODO: if no meals for this day, show some text instead 'No meals for this day'
+              dayPlan.meals.length > 0 ?
               ColumnBuilder(
                 itemCount: dayPlan.meals.length,
                 itemBuilder: (context, index) {
                   return MealTile(dayPlan.meals[index]);
                 },
-              ),
+              ) : Text('No meals added...'),
+              // TODO: add padding to this text widget
             ],
           ),
         ),
@@ -98,17 +103,44 @@ class MealTile extends StatelessWidget {
   }
 }
 
-// TODO: should open date picker and allow user to change selectedDate
 class ChangeDateButton extends StatelessWidget {
-  const ChangeDateButton({ Key key }) : super(key: key);
+  ChangeDateButton({ Key key }) : super(key: key);
+
+  _showDatePicker(BuildContext context) async {
+
+    /// Get current selectedDate from PlannerCubit
+    final DateTime selectedDate = DateTime.parse(BlocProvider.of<PlannerCubit>(context).selectedDate);
+
+    /// Get the first and last days of the current week (Monday - Sunday).
+    /// Code to get the first and last days of the week was found on Stackoverflow:
+    /// https://stackoverflow.com/questions/58287278/how-to-get-start-of-or-end-of-week-in-dart/58287666
+    
+    /// Get the first day of this week
+    final DateTime firstDate = getDate(selectedDate.subtract(Duration(days: selectedDate.weekday-1)));
+    
+    /// Get the last day of this week
+    final DateTime lastDate = getDate(selectedDate.add(Duration(days: DateTime.daysPerWeek - selectedDate.weekday)));
+
+    /// Show date picker and only allow user to select a day from today to the end of the week
+    final DateTime newSelectedDate = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: firstDate,
+      lastDate: lastDate);
+
+    /// Ensure the new selected date is not null and does not match the current selected date
+    if (newSelectedDate != null && newSelectedDate != selectedDate) {
+      BlocProvider.of<PlannerCubit>(context).changeSelectedDate(newSelectedDate);
+    }
+  }
+
+  DateTime getDate(DateTime d) => DateTime(d.year, d.month, d.day);
 
   @override
   Widget build(BuildContext context) {
     return CustomButton(
       label: 'Change Date',
-      onTap: () {
-        print('change date');
-      },
+      onTap: () { _showDatePicker(context); },
     );
   }
 }

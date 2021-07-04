@@ -26,6 +26,50 @@
         "pizza",
         "salad"
       ]
+    },
+    {
+      "date": "2021-07-05",
+      "meals": [
+        "pizza"
+      ]
+    },
+    {
+      "date": "2021-07-06",
+      "meals": [
+        "burger"
+      ]
+    },
+    {
+      "date": "2021-07-07",
+      "meals": [
+        "stir fry"
+      ]
+    },
+    {
+      "date": "2021-07-08",
+      "meals": [
+        "pumpkin"
+      ]
+    },
+    {
+      "date": "2021-07-08",
+      "meals": [
+        "sausages"
+      ]
+    },
+    {
+      "date": "2021-07-09",
+      "meals": []
+    },
+    {
+      "date": "2021-07-10",
+      "meals": [
+        "stir fry"
+      ]
+    },
+    {
+      "date": "2021-07-11",
+      "meals": []
     }
   ]
 }

@@ -22,16 +22,30 @@ class PlannerCubit extends Cubit<PlannerState> {
   /// Defaults to device time on app launch.
   String selectedDate = '';
 
+  /// Days to show on the week screen
+  List<DayPlan> weekDays = [];
+
+  DateTime firstDate, lastDate, selectedDateTime;
+
+  DateTime getDate(DateTime d) => DateTime(d.year, d.month, d.day);
+
   /// Initialises the [selectedDate] variable on app launch.
   void initialiseSelectedDate() {
-    /// Get date today and format to same style as in JSON file
+    /// Set selectedDate to today's date and format it to same style as in JSON file
     var now = DateTime.now();
     selectedDate = Jiffy(now).format('yyyy-MM-dd');
+
+    /// Get the first and last days of the current week (Monday - Sunday).
+    /// Code to get the first and last days of the week was found on Stackoverflow:
+    /// https://stackoverflow.com/questions/58287278/how-to-get-start-of-or-end-of-week-in-dart/58287666
+    /// This is used for DatePicker and for getting the DayPlan objects to show in WeekScreen
+    selectedDateTime = DateTime.parse(selectedDate);
+    firstDate = getDate(selectedDateTime.subtract(Duration(days: selectedDateTime.weekday-1)));
+    lastDate = getDate(selectedDateTime.add(Duration(days: DateTime.daysPerWeek - selectedDateTime.weekday)));
   }
   
   // Load meal planner data from JSON file. In real app this would be from server or device storage.
   Future<void> loadPlanner() async {
-    print('loadPlanner');
     emit(PlannerLoading());
     try {
       final days = await _plannerRepository.fetchWeeklyPlan();
@@ -65,12 +79,26 @@ class PlannerCubit extends Cubit<PlannerState> {
     return null;
   }
 
-  // TODO: delete after testing
-  testChangeDate() {
-    print('testChangeDate');
-    emit(MealAdded('changeDate'));
-    selectedDate = '2021-07-01';
-    /// Set state to initial so the MealPlanner is reloaded
-    emit(PlannerInitial());
+  /// Returns a list of DayPlan objects for this week
+  List<DayPlan> getMealsForThisWeek(WeekPlan weekPlan) {
+    if (weekDays.isNotEmpty) { return weekDays; }
+
+    print('getMealsForThisWeek');
+    for (DayPlan day in weekPlan.days) {
+      /// Parse this [day] object's date string to DateTime object
+      DateTime dateTime = DateTime.parse(day.date);
+      /// If this date is the same or after [firstDate] and if it's the same or befor [lastDate], add it to the list
+      if ((dateTime.isAtSameMomentAs(firstDate) || dateTime.isAfter(firstDate)) &&
+        dateTime.isAtSameMomentAs(lastDate) || dateTime.isBefore(lastDate)) {
+          weekDays.add(day);
+        }
+    }
+    return weekDays;
+  }
+
+  /// Changes the current selectedDate
+  changeSelectedDate(DateTime date) {
+    selectedDate = Jiffy(date).format('yyyy-MM-dd');
+    emit(SelectedDateChanged());
   }
 }

@@ -42,3 +42,10 @@ class MealAdded extends PlannerState {
   @override
   List<Object> get props => [meal];
 }
+
+class SelectedDateChanged extends PlannerState {
+  const SelectedDateChanged();
+
+  @override
+  List<Object> get props => [];
+}
