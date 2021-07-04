@@ -3,73 +3,114 @@
     {
       "date": "2021-07-01",
       "meals": [
-        "stir fry",
-        "pasta",
-        "burgers"
+        "Stir fry",
+        "Beans on toast",
+        "Blueberry Smoothie"
       ]
     },
     {
       "date": "2021-07-02",
       "meals": [
-        "stir fry"
+        "Chicken curry"
       ]
     },
     {
       "date": "2021-07-03",
       "meals": [
-        "burgers"
+        "Fish tacos"
       ]
     },
     {
       "date": "2021-07-04",
       "meals": [
-        "pizza",
-        "salad"
+        "Chicken curry",
+        "Stir fry"
       ]
     },
     {
       "date": "2021-07-05",
       "meals": [
-        "pizza"
+        "Beans on toast",
+        "Veggi chilli"
       ]
     },
     {
       "date": "2021-07-06",
-      "meals": [
-        "burger"
-      ]
+      "meals": []
     },
     {
       "date": "2021-07-07",
       "meals": [
-        "stir fry"
+        "Corn chowder",
+        "Stuffed bell peppers",
+        "Halloumi burger"
       ]
     },
     {
       "date": "2021-07-08",
       "meals": [
-        "pumpkin"
-      ]
-    },
-    {
-      "date": "2021-07-08",
-      "meals": [
-        "sausages"
+        "Pasta & salad",
+        "Stir fry"
       ]
     },
     {
       "date": "2021-07-09",
-      "meals": []
+      "meals": [
+        "Stuffed bell peppers",
+        "Chicken curry"
+      ]
     },
     {
       "date": "2021-07-10",
       "meals": [
-        "stir fry"
+        "Stir fry"
       ]
     },
     {
       "date": "2021-07-11",
       "meals": []
+    },
+    {
+      "date": "2021-07-12",
+      "meals": [
+        "Pasta & salad",
+        "Beans on toast"
+      ]
+    },
+    {
+      "date": "2021-07-13",
+      "meals": [
+        "Veggi chilli"
+      ]
+    },
+    {
+      "date": "2021-07-14",
+      "meals": []
+    },
+    {
+      "date": "2021-07-15",
+      "meals": [
+        "Stuffed bell peppers",
+        "Corn chowder",
+        "Stir fry"
+      ]
+    },
+    {
+      "date": "2021-07-16",
+      "meals": [
+        "Stir fry"
+      ]
+    },
+    {
+      "date": "2021-07-17",
+      "meals": []
+    },
+    {
+      "date": "2021-07-18",
+      "meals": [
+        "Blueberry Smoothie",
+        "Halloumi burger"
+      ]
     }
   ]
 }

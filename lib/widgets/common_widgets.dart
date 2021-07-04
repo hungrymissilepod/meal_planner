@@ -10,6 +10,7 @@ import 'package:mealplanner/models/planner_models.dart';
 
 /// Utilities
 import 'package:jiffy/jiffy.dart';
+import 'package:mealplanner/utilities/size_config.dart';
 
 /// Widgets
 import 'package:mealplanner/screens/meal_select_screen.dart';
@@ -24,28 +25,37 @@ class MealsForDay extends StatelessWidget {
   Widget build(BuildContext context) {
     String dateFormatted = Jiffy(dayPlan.date).format("do MMMM");
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: EdgeInsets.all(SizeConfig.blockSizeHorizontal * 2),
       child: Card(
-        color: Colors.grey[400],
+        color: Colors.grey[350],
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: EdgeInsets.symmetric(vertical: SizeConfig.blockSizeVertical * 2, horizontal: SizeConfig.blockSizeHorizontal * 1.4),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Text(dateFormatted),
-                  AddMealButton(dayPlan.date),
-                ],
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(dateFormatted, style: TextStyle(fontSize: 22)),
+                    AddMealButton(dayPlan.date),
+                  ],
+                ),
               ),
+              SizedBox(height: SizeConfig.blockSizeVertical * 2),
+              /// Show meals for this day
               dayPlan.meals.length > 0 ?
               ColumnBuilder(
                 itemCount: dayPlan.meals.length,
                 itemBuilder: (context, index) {
                   return MealTile(dayPlan.meals[index]);
                 },
-              ) : Text('No meals added...'),
-              // TODO: add padding to this text widget
+              ) :
+              /// If there are no meals, show this text instead
+              Text(
+                'No meals for this day.',
+                style: TextStyle(fontSize: 18),
+              ),
             ],
           ),
         ),
@@ -95,7 +105,7 @@ class MealTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         title: Text(label),
       ),
@@ -107,34 +117,20 @@ class ChangeDateButton extends StatelessWidget {
   ChangeDateButton({ Key key }) : super(key: key);
 
   _showDatePicker(BuildContext context) async {
-
-    /// Get current selectedDate from PlannerCubit
-    final DateTime selectedDate = DateTime.parse(BlocProvider.of<PlannerCubit>(context).selectedDate);
-
-    /// Get the first and last days of the current week (Monday - Sunday).
-    /// Code to get the first and last days of the week was found on Stackoverflow:
-    /// https://stackoverflow.com/questions/58287278/how-to-get-start-of-or-end-of-week-in-dart/58287666
-    
-    /// Get the first day of this week
-    final DateTime firstDate = getDate(selectedDate.subtract(Duration(days: selectedDate.weekday-1)));
-    
-    /// Get the last day of this week
-    final DateTime lastDate = getDate(selectedDate.add(Duration(days: DateTime.daysPerWeek - selectedDate.weekday)));
+    PlannerCubit plannerCubit = BlocProvider.of<PlannerCubit>(context);
 
     /// Show date picker and only allow user to select a day from today to the end of the week
     final DateTime newSelectedDate = await showDatePicker(
       context: context,
-      initialDate: selectedDate,
-      firstDate: firstDate,
-      lastDate: lastDate);
+      initialDate: plannerCubit.selectedDateTime,
+      firstDate: plannerCubit.firstDate,
+      lastDate: plannerCubit.lastDate);
 
     /// Ensure the new selected date is not null and does not match the current selected date
-    if (newSelectedDate != null && newSelectedDate != selectedDate) {
+    if (newSelectedDate != null && newSelectedDate != plannerCubit.selectedDateTime) {
       BlocProvider.of<PlannerCubit>(context).changeSelectedDate(newSelectedDate);
     }
   }
-
-  DateTime getDate(DateTime d) => DateTime(d.year, d.month, d.day);
 
   @override
   Widget build(BuildContext context) {
@@ -171,11 +167,14 @@ class CustomButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      child: Text(label),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 16),
+      ),
       onPressed: onTap,
       style: ElevatedButton.styleFrom(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.0),
+          borderRadius: BorderRadius.circular(25.0),
         ),
       ),
     );

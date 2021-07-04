@@ -81,9 +81,8 @@ class PlannerCubit extends Cubit<PlannerState> {
 
   /// Returns a list of DayPlan objects for this week
   List<DayPlan> getMealsForThisWeek(WeekPlan weekPlan) {
-    if (weekDays.isNotEmpty) { return weekDays; }
-
-    print('getMealsForThisWeek');
+    weekDays.clear();
+    
     for (DayPlan day in weekPlan.days) {
       /// Parse this [day] object's date string to DateTime object
       DateTime dateTime = DateTime.parse(day.date);
@@ -99,6 +98,7 @@ class PlannerCubit extends Cubit<PlannerState> {
   /// Changes the current selectedDate
   changeSelectedDate(DateTime date) {
     selectedDate = Jiffy(date).format('yyyy-MM-dd');
+    selectedDateTime = DateTime.parse(selectedDate);
     emit(SelectedDateChanged());
   }
 }

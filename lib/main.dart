@@ -5,6 +5,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mealplanner/cubit/planner_cubit.dart';
 import 'package:mealplanner/models/planner_repository.dart';
 
+/// Utilities
+import 'package:mealplanner/utilities/size_config.dart';
+
 /// Screens
 import 'package:mealplanner/screens/day_screen.dart';
 import 'package:mealplanner/screens/week_screen.dart';
@@ -35,10 +38,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   
-  // TODO: clean up UI and make it look nicer
-  // TODO: ensure app scales correctly based on screensize. Maybe also make sure it scales in landscape mode
   // TODO: app does not need to save data. But try to ensure that state is consistent when changing dates. So if I add a meal to the 1st, then change date to the 2nd, I should still see the meal I added to the 1st in the WeekScreen
-  // TODO: set final data in JSON file and final meals in meal select screen
   // TODO: comment all code
 
   PageController _pageController;
@@ -70,6 +70,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    SizeConfig().init(context);
     return BlocConsumer<PlannerCubit, PlannerState>(
       builder: (context, state) {
         if (state is PlannerLoaded) {

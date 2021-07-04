@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mealplanner/cubit/planner_cubit.dart';
 
+/// Utilities
+import 'package:mealplanner/utilities/size_config.dart';
+
 class MealSelectScreen extends StatelessWidget {
   MealSelectScreen(this.date, { Key key }) : super(key: key);
   final String date;
 
-  final List<String> meals = ['pasta', 'burger', 'pizza', 'stir fry', 'pumpkin', 'butternut squash', 'tomato and egg', 'curry'];
+  final List<String> meals = ['Stir fry', 'Pasta & salad', 'Beans on toast', 'Blueberry Smoothie', 'Veggi chilli', 'Chicken curry', 'Fish tacos', 'Stuffed bell peppers', 'Halloumi burger', 'Corn chowder'];
 
   @override
   Widget build(BuildContext context) {
@@ -16,35 +19,54 @@ class MealSelectScreen extends StatelessWidget {
       builder: (context, state) {
         if (state is PlannerLoaded) {
           return Scaffold(
+            backgroundColor: Colors.grey[350],
             appBar: AppBar(
-              // TODO: set to correct colour
-              iconTheme: IconThemeData(color: Colors.purple),
+              title: Text('Add Meal', style: TextStyle(color: Colors.black)),
+              iconTheme: IconThemeData(color: Colors.blue),
               backgroundColor: Colors.white,
             ),
-            backgroundColor: Colors.red,
             body: SafeArea(
-              child: ListView.builder(
-                itemCount: meals.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                    child: ListTile(
-                      title: Text(meals[index]),
-                      trailing: ElevatedButton(
-                        onPressed: () {
-                          BlocProvider.of<PlannerCubit>(context).addMealToDate(state.weekPlan, date, meals[index]);
-                          Navigator.of(context).pop();
-                        },
-                        child: Text('Add'),
-                      ),
-                    ),
-                  );
-                }
+              child: Padding(
+                padding: EdgeInsets.all(SizeConfig.blockSizeHorizontal * 2),
+                child: ListView.separated(
+                  itemCount: meals.length,
+                  itemBuilder: (context, index) {
+                    return AddMealTile(meals[index], () {
+                      BlocProvider.of<PlannerCubit>(context).addMealToDate(state.weekPlan, date, meals[index]);
+                      Navigator.of(context).pop();
+                    });
+                  },
+                  separatorBuilder: (context, index) {
+                    return SizedBox(height: SizeConfig.blockSizeVertical * 0.8);
+                  },
+                ),
               ),
             ),
           );
         }
         return Container();
       },
+    );
+  }
+}
+
+class AddMealTile extends StatelessWidget {
+  const AddMealTile(this.meal, this.callback, { Key key }) : super(key: key);
+
+  final String meal;
+  final Function callback;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ListTile(
+        title: Text(meal),
+        trailing: ElevatedButton(
+          onPressed: callback,
+          child: Text('Add'),
+        ),
+      ),
     );
   }
 }
