@@ -18,12 +18,12 @@ class PlannerCubit extends Cubit<PlannerState> {
 
   final PlannerRepository _plannerRepository;
 
+  /// User's week meal plan
+  WeekPlan weekPlan;
+
   /// Keeps track of the date the users has selected. Used to show the selected date's meal plan.
   /// Defaults to device time on app launch.
   String selectedDate = '';
-
-  /// Days to show on the week screen
-  List<DayPlan> weekDays = [];
 
   DateTime firstDate, lastDate, selectedDateTime;
 
@@ -44,21 +44,22 @@ class PlannerCubit extends Cubit<PlannerState> {
     lastDate = getDate(selectedDateTime.add(Duration(days: DateTime.daysPerWeek - selectedDateTime.weekday)));
   }
   
-  // Load meal planner data from JSON file. In real app this would be from server or device storage.
+  // Load meal planner data from JSON file. In real app this would be from a database or device storage.
   Future<void> loadPlanner() async {
+    /// If weekPlan is not null there is no need to load it again
+    if (weekPlan != null) { emit(PlannerLoaded(weekPlan)); return; }
+
     emit(PlannerLoading());
     try {
-      final days = await _plannerRepository.fetchWeeklyPlan();
-      emit(PlannerLoaded(days));
+      weekPlan = await _plannerRepository.fetchWeeklyPlan();
+      emit(PlannerLoaded(weekPlan));
     } catch (e) {
-      emit(PlannerError('Failed to load planner'));
+      emit(PlannerError('Failed to load meal planner'));
     }
   }
 
   /// Adds [meal] to [date] given
-  void addMealToDate(WeekPlan weekPlan, String date, String meal) async {
-    emit(PlannerLoading());
-
+  void addMealToDate(String date, String meal) async {
     /// Find DayPlan element with this [date] and add the [meal] to this day
     int index = weekPlan.days.indexWhere((d) => d.date == date);
     if (index != -1) {
@@ -71,8 +72,8 @@ class PlannerCubit extends Cubit<PlannerState> {
     emit(PlannerLoaded(weekPlan));
   }
 
-  /// Gets DayPlan object for this [selectedDate]
-  DayPlan getMealsForSelectedDate(WeekPlan weekPlan) {
+  /// Gets DayPlan object for [selectedDate]
+  DayPlan getMealsForSelectedDate() {
     /// Find a DayPlan for today's date
     int index = weekPlan.days.indexWhere((element) => element.date == selectedDate);
     if (index != -1) { return weekPlan.days[index]; }
@@ -80,22 +81,22 @@ class PlannerCubit extends Cubit<PlannerState> {
   }
 
   /// Returns a list of DayPlan objects for this week
-  List<DayPlan> getMealsForThisWeek(WeekPlan weekPlan) {
-    weekDays.clear();
+  List<DayPlan> getMealsForThisWeek() {
+    List<DayPlan> weekDays = [];
     
     for (DayPlan day in weekPlan.days) {
       /// Parse this [day] object's date string to DateTime object
       DateTime dateTime = DateTime.parse(day.date);
       /// If this date is the same or after [firstDate] and if it's the same or befor [lastDate], add it to the list
       if ((dateTime.isAtSameMomentAs(firstDate) || dateTime.isAfter(firstDate)) &&
-        dateTime.isAtSameMomentAs(lastDate) || dateTime.isBefore(lastDate)) {
+        (dateTime.isAtSameMomentAs(lastDate) || dateTime.isBefore(lastDate))) {
           weekDays.add(day);
         }
     }
     return weekDays;
   }
 
-  /// Changes the current selectedDate
+  /// Changes the current [selectedDate]
   changeSelectedDate(DateTime date) {
     selectedDate = Jiffy(date).format('yyyy-MM-dd');
     selectedDateTime = DateTime.parse(selectedDate);

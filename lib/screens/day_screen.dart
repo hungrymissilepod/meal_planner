@@ -10,6 +10,7 @@ import 'package:mealplanner/models/planner_models.dart';
 /// Widgets
 import 'package:mealplanner/widgets/common_widgets.dart' show MealsForDay, ChangeDateButton;
 
+/// Shows the day plan for [selectedDate]
 class DayScreen extends StatelessWidget {
   const DayScreen(this.state, { Key key }) : super(key: key);
   final PlannerLoaded state;
@@ -17,7 +18,7 @@ class DayScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     /// Load DayPlan for selectedDate
-    DayPlan dayPlan = BlocProvider.of<PlannerCubit>(context).getMealsForSelectedDate(state.weekPlan);
+    DayPlan dayPlan = BlocProvider.of<PlannerCubit>(context).getMealsForSelectedDate();
     return SafeArea(
       child: SingleChildScrollView(
         physics: BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),

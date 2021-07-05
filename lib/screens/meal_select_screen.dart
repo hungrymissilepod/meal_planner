@@ -11,7 +11,9 @@ class MealSelectScreen extends StatelessWidget {
   MealSelectScreen(this.date, { Key key }) : super(key: key);
   final String date;
 
-  final List<String> meals = ['Stir fry', 'Pasta & salad', 'Beans on toast', 'Blueberry Smoothie', 'Veggi chilli', 'Chicken curry', 'Fish tacos', 'Stuffed bell peppers', 'Halloumi burger', 'Corn chowder'];
+  /// List of available meals.
+  /// In a real app this might be saved in a config file or in a database
+  final List<String> meals = ['Stir fry', 'Pasta & salad', 'Beans on toast', 'Blueberry Smoothie', 'Veggi chilli', 'Chicken curry', 'Fish tacos', 'Stuffed bell peppers', 'Halloumi burger', 'Corn chowder', 'Cheesecake', 'Strawberries & cream', 'Beef ragu', 'Pizza', 'Apple pie'];
 
   @override
   Widget build(BuildContext context) {
@@ -29,10 +31,12 @@ class MealSelectScreen extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.all(SizeConfig.blockSizeHorizontal * 2),
                 child: ListView.separated(
+                  physics: BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                   itemCount: meals.length,
                   itemBuilder: (context, index) {
                     return AddMealTile(meals[index], () {
-                      BlocProvider.of<PlannerCubit>(context).addMealToDate(state.weekPlan, date, meals[index]);
+                      /// This callback will add this meal to this date
+                      BlocProvider.of<PlannerCubit>(context).addMealToDate(date, meals[index]);
                       Navigator.of(context).pop();
                     });
                   },

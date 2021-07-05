@@ -16,7 +16,7 @@ class DayPlan {
 }
 
 /// Model for the week
-/// Contains a list of Day objects for this week
+/// Contains a list of DayPlan objects for this week
 class WeekPlan {
 
   WeekPlan({ this.days });

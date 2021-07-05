@@ -10,6 +10,7 @@ import 'package:mealplanner/models/planner_models.dart';
 /// Widgets
 import 'package:mealplanner/widgets/common_widgets.dart' show MealsForDay, ColumnBuilder;
 
+/// Shows all day plans for this week
 class WeekScreen extends StatelessWidget {
   const WeekScreen(this.state, { Key key }) : super(key: key);
 
@@ -18,7 +19,7 @@ class WeekScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     /// Get all DayPlan objects for this week
-    List<DayPlan> days = BlocProvider.of<PlannerCubit>(context, listen: false).getMealsForThisWeek(state.weekPlan);
+    List<DayPlan> days = BlocProvider.of<PlannerCubit>(context, listen: false).getMealsForThisWeek();
     return SafeArea(
       child: SingleChildScrollView(
         physics: BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),

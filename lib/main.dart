@@ -37,9 +37,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  
-  // TODO: app does not need to save data. But try to ensure that state is consistent when changing dates. So if I add a meal to the 1st, then change date to the 2nd, I should still see the meal I added to the 1st in the WeekScreen
-  // TODO: comment all code
 
   PageController _pageController;
   /// Current page shown in PageView
@@ -79,7 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onPageChanged: _setCurrentPage, /// this ensures that the correct page is highlighted when scrolling to different page
               controller: _pageController,
               children: [
-                DayScreen(state),
+                DayScreen(state), /// pass PlannerLoaded state to these screens
                 WeekScreen(state),
               ],
             ),
@@ -102,9 +99,10 @@ class _MyHomePageState extends State<MyHomePage> {
         return Scaffold(body: Center(child: CircularProgressIndicator()));
       },
       listener: (context, state) {
-        /// When selectedDate is changed the state is reset to PlannerInitial. Here we will reload the meal planner.
+        /// When selectedDate is changed we will reload the meal planner.
         if (state is SelectedDateChanged) {
           BlocProvider.of<PlannerCubit>(context).loadPlanner();
+        /// When a meal is added, show a snack bar message
         } else if (state is MealAdded) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Meal added: ${state.meal}')));
         }
